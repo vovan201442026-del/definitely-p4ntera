@@ -1,0 +1,41 @@
+if (Date.now() - data.timestamp > 86400000) return;
+if (channel === 'secret' && (Date.now() - data.timestamp > 12000)) return;
+renderedIds.add(id);
+let displayText = data.text;
+if (channel === 'secret') {
+const key = document.getElementById('secret-key-input').value || 'default';
+displayText = decipher(data.text, key);
+}
+const isOut = (data.author === currentUser && channel !== 'anon');
+const msgDiv = document.createElement('div');
+msgDiv.className = msg ${isOut ? 'out' : 'in'} ${channel === 'secret' ? 'secret-msg' : ''};
+msgDiv.id = 'msg-' + id;
+let badge = '';
+if (data.role === 'admin') badge = '✓ Создатель';
+if (data.role === 'teacher') badge = '★ Учитель';
+msgDiv.innerHTML = <div class="msg-author">${escapeHtml(data.author)} ${badge}</div> <div>${escapeHtml(displayText)}</div> <div class="msg-time">${data.time}</div>;
+chatBox.appendChild(msgDiv);
+chatBox.scrollTop = chatBox.scrollHeight;
+if (channel === 'secret') {
+setTimeout(() => {
+const el = document.getElementById('msg-' + id);
+if (el) el.remove();
+gun.get(NETWORK_ID).get('secret').get(id).put(null);
+}, 10000);
+}
+});
+}
+function clearChannel() {
+if (userRole !== 'admin') return;
+if (confirm('Удалить все сообщения в этом канале?')) {
+gun.get(NETWORK_ID).get(currentChannel).map().once((data, id) => {
+gun.get(NETWORK_ID).get(currentChannel).get(id).put(null);
+});
+document.getElementById('chat-box').innerHTML = '';
+}
+}
+function escapeHtml(text) {
+const div = document.createElement('div');
+div.innerText = text;
+return div.innerHTML;
+}
